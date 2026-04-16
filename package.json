@@ -1,0 +1,10 @@
+{
+  "name": "mini-instagram",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "pnpm --filter app build",
+    "dev": "pnpm --filter app dev",
+    "start": "pnpm --filter app start"
+  }
+}
