@@ -1,5 +1,8 @@
-import { route as joinHandler, schema as joinSchema } from "./join.ts";
+import type { FastifyInstance } from "fastify";
+import { route as joinHandler, schema as joinSchema } from "./join.js";
+import { route as loginHandler, schema as loginSchema } from "./login.js";
 
-export default function (fastify) {
+export default function authRoutes(fastify: FastifyInstance) {
   fastify.post("/join", { schema: joinSchema }, joinHandler);
+  fastify.post("/login", { schema: loginSchema }, loginHandler);
 }

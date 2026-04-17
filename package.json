@@ -1,10 +1,10 @@
 {
-  "name": "mini-instagram",
-  "private": true,
-  "version": "0.0.0",
-  "scripts": {
-    "build": "pnpm --filter app build",
-    "dev": "pnpm --filter app dev",
-    "start": "pnpm --filter app start"
-  }
+	"name": "mini-instagram",
+	"private": true,
+	"type:": "module",
+    "scripts": {
+        "dev:api":"pnpm --filter @mini-instagram/api dev",
+        "build:api":"pnpm --filter @mini-instagram/api build",
+        "start:api":"pnpm --filter @mini-instagram/api start"
+    }
 }
