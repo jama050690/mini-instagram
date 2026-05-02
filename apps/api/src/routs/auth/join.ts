@@ -1,42 +1,16 @@
-<<<<<<< HEAD
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { users } from "./db.js";
-
-const bodyJSONSchema = {
-  type: "object",
-  required: ["email", "username", "password"],
-  additionalProperties: false,
-  properties: {
-    email: {
-      type: "string",
-      description: "Foydalanuvchi email manzili.",
-    },
-    username: {
-      type: "string",
-      description: "5-40 belgi oralig'idagi username.",
-    },
-    password: {
-      type: "string",
-      description:
-        "8-64 belgi, kamida 1 kichik harf, 1 katta harf, 1 raqam va 1 maxsus belgi bo'lishi kerak.",
-    },
-  },
-};
-
-export const schema = {
-  body: bodyJSONSchema,
-=======
-import type { FastifyReply, FastifyRequest, FastifyInstance } from "fastify";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import { db, users } from "./db.js"; 
+import { users, db } from "./db.js"; // db qo'shildi
 import ms from "ms";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "super-secret-refresh";
 const REFRESH_DURATION = "7d"; 
 const ACCESS_DURATION = "15m";
-export const joinSchema = {
+
+// index.ts aynan 'schema' nomini qidirmoqda
+export const schema = {
   body: {
     type: "object",
     required: ["email", "username", "password"],
@@ -46,7 +20,6 @@ export const joinSchema = {
       password: { type: "string", minLength: 8 }
     }
   }
->>>>>>> 482ad40 (JWT wa Cookie sozlandi)
 };
 
 type JoinBody = {
@@ -55,58 +28,17 @@ type JoinBody = {
   password: string;
 };
 
-<<<<<<< HEAD
-export function route(
-  req: FastifyRequest<{ Body: JoinBody }>,
-  res: FastifyReply,
-) {
-  let { email, username, password } = req.body;
-
-=======
-// 1. REGISTER (JOIN) FUNKSIYASI
-export async function joinRoute(
+// index.ts aynan 'route' nomini qidirmoqda
+export async function route(
   req: FastifyRequest<{ Body: JoinBody }>,
   reply: FastifyReply,
 ) {
   let { email, username, password } = req.body;
->>>>>>> 482ad40 (JWT wa Cookie sozlandi)
   username = username.toLowerCase();
   email = email.toLowerCase();
 
   const usernamePattern = /^(?=.{5,40}$)[a-z]+(_[a-z]+)*(_[0-9]+|[0-9]*)$/;
-<<<<<<< HEAD
-  const emailPattern =
-    /^(?=.{1,254}$)[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,255}\.[a-zA-Z]{2,}$/;
-  // Password: 8-64 belgi, katta-kichik harf, raqam va maxsus belgi majburiy.
-  const passwordPattern =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]).{8,64}$/;
-
-  if (users.has(username)) {
-    return res.status(400).send({ code: "API_AUTH_USERNAME_EXISTS" });
-  } else if (!usernamePattern.test(username)) {
-    return res.status(400).send({ code: "API_AUTH_USERNAME_INVALID" });
-  }
-
-  if (!emailPattern.test(email)) {
-    return res.status(400).send({ code: "API_AUTH_EMAIL_INVALID" });
-  }
-
-  if (!passwordPattern.test(password)) {
-    return res.status(400).send({ code: "API_AUTH_PASSWORD_INVALID" });
-  }
-
-  //
-
-  users.set(username, {
-    email,
-    password,
-  });
-
-  return {
-    code: "API_AUTH_OK",
-  };
-}
-=======
+  
   if (users.has(username)) {
     return reply.status(400).send({ code: "API_AUTH_USERNAME_EXISTS" });
   }
@@ -114,27 +46,20 @@ export async function joinRoute(
     return reply.status(400).send({ code: "API_AUTH_USERNAME_INVALID" });
   }
 
-  // Hashlash
   const hash = await argon2.hash(password);
-
-  // Bazaga saqlash
   users.set(username, { email, username, password: hash });
 
-  // Tokenlarni yaratish
   const accessToken = jwt.sign({ username }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_DURATION });
   const refreshToken = jwt.sign({ username }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_DURATION });
 
-  // Refresh tokenni bazaga saqlash
   db.refreshTokens.set(refreshToken, username);
 
-  // Cookieni o'rnatish
   reply.setCookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/refresh",
     maxAge: ms(REFRESH_DURATION),
-
     signed: true,
   });
 
@@ -168,7 +93,6 @@ export async function refreshRoute(req: FastifyRequest, reply: FastifyReply) {
 // 3. AUTHENTICATE HOOK (Middleware)
 export const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
   const auth = req.headers.authorization;
-
   if (!auth?.startsWith("Bearer ")) {
     return reply.code(401).send({ error: "Unauthorized" });
   }
@@ -181,4 +105,3 @@ export const authenticate = async (req: FastifyRequest, reply: FastifyReply) => 
     return reply.code(401).send({ error: "Unauthorized" });
   }
 };
->>>>>>> 482ad40 (JWT wa Cookie sozlandi)
