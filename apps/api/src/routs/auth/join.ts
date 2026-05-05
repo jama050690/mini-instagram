@@ -105,3 +105,5 @@ export const authenticate = async (req: FastifyRequest, reply: FastifyReply) => 
     return reply.code(401).send({ error: "Unauthorized" });
   }
 };
+
+

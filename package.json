@@ -2,9 +2,12 @@
 	"name": "mini-instagram",
 	"private": true,
 	"type:": "module",
-    "scripts": {
-        "dev:api":"pnpm --filter @mini-instagram/api dev",
-        "build:api":"pnpm --filter @mini-instagram/api build",
-        "start:api":"pnpm --filter @mini-instagram/api start"
-    }
+	"scripts": {
+		"dev": "pnpm --parallel -r dev",
+		"dev:api": "pnpm --filter @mini-instagram/api dev",
+		"dev:web": "pnpm --filter @mini-instagram/web dev",
+		"dev:dashboard": "pnpm --filter @mini-instagram/dashboard dev",
+		"build:api": "pnpm --filter @mini-instagram/api build",
+		"start:api": "pnpm --filter @mini-instagram/api start"
+	}
 }
