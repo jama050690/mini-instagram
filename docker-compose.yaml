@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Ma'lumotlar bazasi
+  pg:
+    image: postgres:17-alpine
+    container_name: mini_insta_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mini_instagram
+    ports:
+      - "5433:5432"
+
+  # Backend (API)
+  api:
+    build: ./api
+    container_name: mini_insta_api
+    ports:
+      - "31100:3100"
+    env_file:
+      - .env
+    depends_on:
+      - pg
+
+  # Frontend (WEB)
+  web:
+    build: ./web
+    container_name: mini_insta_web
+    ports:
+      - "3200:3200"
+    depends_on:
+      - api
+
+  # Admin Panel
+  dashboard:
+    build: ./dashboard
+    container_name: mini_insta_admin
+    ports:
+      - "5100:5100"
+    depends_on:
+      - api
