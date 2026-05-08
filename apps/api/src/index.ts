@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
-import routs from "./routs/index.ts";
+import routs from "./routs/index.js";
 
 const fastify = Fastify({
   logger: true,
@@ -22,7 +22,7 @@ await fastify.register(cookie, {
 fastify.register(routs);
 
 try {
-  await fastify.listen({ port: PORT });
+  await fastify.listen({ host: "0.0.0.0", port: PORT });
   fastify.log.info(`API ready at: ${PORT}`);
 } catch (err) {
   fastify.log.error(err);
