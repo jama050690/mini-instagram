@@ -1,4 +1,5 @@
-import { query } from "../../db.ts"
+import type { FastifyReply, FastifyRequest } from "fastify";
+import { query } from "../../db.js"
 
 const bodyJSONSchema = {
 	type: "object",
@@ -20,9 +21,16 @@ export const schema = {
 	body: bodyJSONSchema,
 }
 
-export async function route( req, res ) {
+type FollowBody = {
+	follower_id: string;
+	followee_id: string;
+};
 
-	let { follower_id, followee_id } = req.body
+export async function route(
+	req: FastifyRequest,
+	res: FastifyReply,
+) {
+	const { follower_id, followee_id } = req.body as FollowBody
 
 	const SQL = `
 		INSERT INTO relations ( follower_id, followee_id )

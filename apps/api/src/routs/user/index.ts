@@ -1,7 +1,8 @@
-import { route as followHandler, schema as followSchema } from "./follow.ts"
-import * as hooks from "../../hooks/index.ts"
+import type { FastifyInstance } from "fastify";
+import { route as followHandler, schema as followSchema } from "./follow.js"
+import * as hooks from "../../hooks/index.js"
 
-export default function( fastify ) {
+export default function( fastify: FastifyInstance ) {
 
 	fastify.post( "/user/follow", {
 		schema: followSchema,

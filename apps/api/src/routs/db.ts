@@ -1,4 +1,4 @@
-import { query } from "../../db/index.ts";
+import { query } from "../db.js";
 export const refreshTokens = new Map<string, string>();
 
 type UserRow = {

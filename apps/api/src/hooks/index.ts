@@ -1,1 +1,1 @@
-export { authenticate } from "./authenticate.ts"
+export { authenticate } from "./authenticate.js"

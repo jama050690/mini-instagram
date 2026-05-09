@@ -1,4 +1,10 @@
-export function authenticate( req, reply, done ) {
+import type { FastifyReply, FastifyRequest } from "fastify";
+
+export function authenticate(
+	req: FastifyRequest,
+	reply: FastifyReply,
+	done: () => void,
+) {
 
 	// const auth = req.headers.authorization
 
