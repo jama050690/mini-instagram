@@ -9,5 +9,8 @@
 		"dev:dashboard": "pnpm --filter @mini-instagram/dashboard dev",
 		"build:api": "pnpm --filter @mini-instagram/api build",
 		"start:api": "pnpm --filter @mini-instagram/api start"
+	},
+	"dependencies": {
+		"@anthropic-ai/sdk": "^0.95.1"
 	}
 }

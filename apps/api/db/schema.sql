@@ -1,4 +1,4 @@
-create database if not exists mini_instagram;
+create database mini_instagram;
 
 create table users (
 	id uuid primary key default gen_random_uuid(),

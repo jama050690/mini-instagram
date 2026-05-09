@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { refreshTokens } from "./db.js";
+import { refreshTokens } from "../db.js";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   fastify.post("/logout", async (req, reply) => {

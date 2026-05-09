@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import { getUserByLogin, db } from "./db.js"; // db.ts dan kerakli funksiyalarni import qilish
+import { getUserByLogin, query, refreshTokens } from "../db.js";
 import ms from "ms";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";
@@ -21,11 +21,16 @@ export const schema = {
   }
 };
 
+type LoginBody = {
+  usernameOrEmail: string;
+  password: string;
+};
+
 // index.ts aynan 'route' nomini qidirmoqda
-export async function route(req: FastifyRequest<{ Body: any }>, res: FastifyReply) {
+export async function route(req: FastifyRequest<{ Body: LoginBody }>, res: FastifyReply) {
   const { usernameOrEmail, password } = req.body;
 
-  const user = getUserByLogin(usernameOrEmail);
+  const user = await getUserByLogin(usernameOrEmail);
   if (!user) {
     return res.status(401).send({ code: "API_AUTH_USER_NOT_FOUND" });
   }
@@ -38,7 +43,7 @@ export async function route(req: FastifyRequest<{ Body: any }>, res: FastifyRepl
   const accessToken = jwt.sign({ username: user.username }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_DURATION });
   const refreshToken = jwt.sign({ username: user.username }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_DURATION });
 
-  db.refreshTokens.set(refreshToken, user.username);
+  refreshTokens.set(refreshToken, user.username);
 
   res.setCookie("refreshToken", refreshToken, {
     httpOnly: true,

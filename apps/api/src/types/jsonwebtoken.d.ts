@@ -13,8 +13,11 @@ declare module "jsonwebtoken" {
     options?: SignOptions,
   ): string;
 
+  export function verify(token: string, secretOrPublicKey: string): JwtPayload | string;
+
   const jwt: {
     sign: typeof sign;
+    verify: typeof verify;
   };
 
   export default jwt;

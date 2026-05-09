@@ -1,7 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import { users, db } from "./db.js"; // db qo'shildi
+// MUHIM: db importini to'g'rilaymiz
+import { getUserByEmail, getUserByUsername, refreshTokens, query } from "../db.ts";
+
 import ms from "ms";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";
@@ -9,7 +11,6 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "super-secret-r
 const REFRESH_DURATION = "7d"; 
 const ACCESS_DURATION = "15m";
 
-// index.ts aynan 'schema' nomini qidirmoqda
 export const schema = {
   body: {
     type: "object",
@@ -17,7 +18,10 @@ export const schema = {
     properties: {
       email: { type: "string", format: "email" },
       username: { type: "string", minLength: 5, maxLength: 40 },
-      password: { type: "string", minLength: 8 }
+      password: { type: "string", minLength: 8 },
+      firstname: { type: "string", maxLength: 32 },
+      lastname: { type: "string", maxLength: 32 },
+      birthday: { type: "string" }
     }
   }
 };
@@ -26,33 +30,56 @@ type JoinBody = {
   email: string;
   username: string;
   password: string;
+  firstname?: string;
+  lastname?: string;
+  birthday?: string;
 };
 
-// index.ts aynan 'route' nomini qidirmoqda
 export async function route(
   req: FastifyRequest<{ Body: JoinBody }>,
   reply: FastifyReply,
 ) {
-  let { email, username, password } = req.body;
+  let { email, username, password, firstname, lastname, birthday } = req.body;
   username = username.toLowerCase();
   email = email.toLowerCase();
-
+  
   const usernamePattern = /^(?=.{5,40}$)[a-z]+(_[a-z]+)*(_[0-9]+|[0-9]*)$/;
   
-  if (users.has(username)) {
+  if (await getUserByUsername(username)) {
     return reply.status(400).send({ code: "API_AUTH_USERNAME_EXISTS" });
+  }
+  if (await getUserByEmail(email)) {
+    return reply.status(400).send({ code: "API_AUTH_EMAIL_EXISTS" });
   }
   if (!usernamePattern.test(username)) {
     return reply.status(400).send({ code: "API_AUTH_USERNAME_INVALID" });
   }
 
   const hash = await argon2.hash(password);
-  users.set(username, { email, username, password: hash });
+  const normalizedBirthday = birthday
+    ? /^\d{2}-\d{2}-\d{4}$/.test(birthday)
+      ? birthday.split("-").reverse().join("-")
+      : birthday
+    : null;
+
+  await query(
+    `
+      INSERT INTO users (username, email, password, firstname, lastname, birthday)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `,
+    username,
+    email,
+    hash,
+    firstname ?? null,
+    lastname ?? null,
+    normalizedBirthday,
+  );
 
   const accessToken = jwt.sign({ username }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_DURATION });
   const refreshToken = jwt.sign({ username }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_DURATION });
 
-  db.refreshTokens.set(refreshToken, username);
+  // TUZATILDI: db. olib tashlandi
+  refreshTokens.set(refreshToken, username);
 
   reply.setCookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -66,7 +93,6 @@ export async function route(
   return { accessToken, code: "API_AUTH_OK" };
 }
 
-// 2. REFRESH TOKEN FUNKSIYASI
 export async function refreshRoute(req: FastifyRequest, reply: FastifyReply) {
   const cookie = req.cookies.refreshToken;
   
@@ -75,7 +101,8 @@ export async function refreshRoute(req: FastifyRequest, reply: FastifyReply) {
   const unsigned = req.unsignCookie(cookie);
   const token = unsigned.value;
 
-  if (!unsigned.valid || !token || !db.refreshTokens.has(token)) {
+  // TUZATILDI: db. olib tashlandi
+  if (!unsigned.valid || !token || !refreshTokens.has(token)) {
     return reply.code(401).send({ error: "Invalid refresh token" });
   }
 
@@ -85,12 +112,12 @@ export async function refreshRoute(req: FastifyRequest, reply: FastifyReply) {
 
     return { accessToken };
   } catch (err) {
-    db.refreshTokens.delete(token); // Muddati o'tgan bo'lsa bazadan o'chirish
+    // TUZATILDI: db. olib tashlandi
+    if (token) refreshTokens.delete(token); 
     return reply.code(401).send({ error: "Token expired or invalid" });
   }
 }
 
-// 3. AUTHENTICATE HOOK (Middleware)
 export const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) {
@@ -105,5 +132,3 @@ export const authenticate = async (req: FastifyRequest, reply: FastifyReply) => 
     return reply.code(401).send({ error: "Unauthorized" });
   }
 };
-
-
