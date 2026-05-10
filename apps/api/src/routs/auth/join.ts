@@ -118,17 +118,3 @@ export async function refreshRoute(req: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-export const authenticate = async (req: FastifyRequest, reply: FastifyReply) => {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith("Bearer ")) {
-    return reply.code(401).send({ error: "Unauthorized" });
-  }
-
-  try {
-    const token = auth.split(" ")[1];
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    (req as any).user = decoded; 
-  } catch {
-    return reply.code(401).send({ error: "Unauthorized" });
-  }
-};
