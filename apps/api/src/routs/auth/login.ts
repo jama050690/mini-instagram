@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import { getUserByLogin, query, refreshTokens } from "../db.js";
+import { getUserByLogin, query, refreshTokens } from "../services/db.js";
 import ms from "ms";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";

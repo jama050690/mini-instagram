@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 // MUHIM: db importini to'g'rilaymiz
-import { getUserByEmail, getUserByUsername, refreshTokens, query } from "../db.js";
+import { getUserByEmail, getUserByUsername, refreshTokens, query } from "../services/db.js";
 
 import ms from "ms";
 
