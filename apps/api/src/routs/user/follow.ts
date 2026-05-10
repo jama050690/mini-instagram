@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { query } from "../../db.js"
+import { query } from "../../db/index.js"
 
 const bodyJSONSchema = {
 	type: "object",

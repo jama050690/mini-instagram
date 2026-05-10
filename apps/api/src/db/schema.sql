@@ -1,6 +1,6 @@
-create database mini_instagram;
+create extension if not exists pgcrypto;
 
-create table users (
+create table if not exists users (
 	id uuid primary key default gen_random_uuid(),
 	username varchar(40) unique,
 	password varchar(255) not null,
@@ -12,16 +12,26 @@ create table users (
 	created_at timestamptz default current_timestamp
 );
 
-create table relations (
+create table if not exists relations (
 	id uuid primary key default gen_random_uuid(),
 	follower_id uuid references users(id),
 	followee_id uuid references users(id),
 	created_at timestamptz default current_timestamp
 );
 
-ALTER TABLE relations
-ADD CONSTRAINT relations_follower_followee_unique
-UNIQUE ( follower_id, followee_id );
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1
+		FROM pg_constraint
+		WHERE conname = 'relations_follower_followee_unique'
+	) THEN
+		ALTER TABLE relations
+		ADD CONSTRAINT relations_follower_followee_unique
+		UNIQUE ( follower_id, followee_id );
+	END IF;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION validate_username()
 RETURNS TRIGGER AS $$
@@ -33,14 +43,16 @@ BEGIN
 		IF NEW.username !~ '^(?=.{5,40}$)[a-z]+(_[a-z]+)*(_[0-9]+|[0-9]*)$' THEN
 
 			RAISE EXCEPTION 'Invalid username format: %', NEW.username
-				USING ERRCODE = '22023'
-		END IF
-	END IF
+				USING ERRCODE = '22023';
+		END IF;
+	END IF;
 
-	RETURN NEW
-END
+	RETURN NEW;
+END;
 $$ LANGUAGE plpgsql
 ;
+
+DROP TRIGGER IF EXISTS users_validate_username ON users;
 
 CREATE TRIGGER users_validate_username
 BEFORE UPDATE OF username
