@@ -10,8 +10,13 @@ const PORT = parseInt(process.env.VITE_API_PORT ?? "3101", 10);
 
 fastify.get("/", async () => ({ message: "Ok" }));
 
+const corsOrigins = (process.env.VITE_CORS_ORIGIN ?? "http://localhost:3200,http://localhost:5100")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 await fastify.register(cors, {
-  origin:"http://localhost:3200",
+  origin: corsOrigins,
   credentials: true,
 });
 

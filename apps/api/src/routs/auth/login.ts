@@ -51,10 +51,11 @@ export async function route(req: FastifyRequest<{ Body: LoginBody }>, res: Fasti
 
   refreshTokens.set(refreshToken, user.username);
 
+  const isProd = process.env.NODE_ENV === "production";
   res.setCookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     path: "/refresh",
     maxAge: ms(REFRESH_DURATION),
     signed: true,

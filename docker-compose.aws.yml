@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: ${VITE_PG_USER}
       POSTGRES_PASSWORD: ${VITE_PG_PASSWORD}
       POSTGRES_DB: ${VITE_PG_DBNAME}
-    ports:
-      - "5435:5432"
     volumes:
       - mini_insta_pg_data:/var/lib/postgresql/data
 
@@ -17,38 +15,16 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     container_name: mini_insta_api
+    restart: always
     environment:
       DOCKER_ENV: "true"
+      NODE_ENV: production
     ports:
-      - "3101:3101"
+      - "127.0.0.1:3101:3101"
     env_file:
       - .env
     depends_on:
       - pg
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: mini_insta_web
-    ports:
-      - "3200:3200"
-    env_file:
-      - .env
-    depends_on:
-      - api
-
-  dashboard:
-    build:
-      context: .
-      dockerfile: apps/dashboard/Dockerfile
-    container_name: mini_insta_admin
-    ports:
-      - "5100:5100"
-    env_file:
-      - .env
-    depends_on:
-      - api
 
 volumes:
   mini_insta_pg_data:

@@ -100,10 +100,11 @@ export async function route(
   // TUZATILDI: db. olib tashlandi
   refreshTokens.set(refreshToken, username);
 
+  const isProd = process.env.NODE_ENV === "production";
   reply.setCookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     path: "/refresh",
     maxAge: ms(REFRESH_DURATION),
     signed: true,
@@ -124,9 +125,11 @@ export async function route(
 
   // Send confirmation code
 
+  const apiBaseUrl = process.env.VITE_API_BASE_URL ?? "http://localhost:3101";
+
   const html = `
     <h1>Welcome</h1>
-    <a href="http://localhost:3101/confirm?token=${ randomString }" target="_blank">Betti bosing</a>
+    <a href="${apiBaseUrl}/confirm?token=${ randomString }" target="_blank">Betti bosing</a>
   `
 
   await transporter.sendMail({
