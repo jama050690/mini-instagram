@@ -1,15 +1,27 @@
+import crypto from "crypto"
 import type { FastifyReply, FastifyRequest } from "fastify";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer"
 // MUHIM: db importini to'g'rilaymiz
 import { getUserByEmail, getUserByUsername, refreshTokens, query } from "../services/db.js";
 
 import ms from "ms";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "super-secret-refresh";
+const ACCESS_TOKEN_SECRET = process.env.VITE_JWT_ACCESS_SECRET || "super-secret-access";
+const REFRESH_TOKEN_SECRET = process.env.VITE_JWT_REFRESH_SECRET || "super-secret-refresh";
 const REFRESH_DURATION = "7d"; 
 const ACCESS_DURATION = "15m";
+
+let transporter = nodemailer.createTransport({
+  host: process.env.VITE_STMP_HOST,
+    port: Number(process.env.VITE_STMP_PORT) || 465,
+    secure: true,
+    auth: {
+      user: process.env.VITE_STMP_USER,
+      pass: process.env.VITE_STMP_PASSWORD,
+    },
+})
 
 export const schema = {
   body: {
@@ -62,10 +74,11 @@ export async function route(
       : birthday
     : null;
 
-  await query(
+  const [user] = await query<{ id: string }>(
     `
       INSERT INTO users (username, email, password, firstname, lastname, birthday)
       VALUES ($1, $2, $3, $4, $5, $6)
+      returning id
     `,
     username,
     email,
@@ -75,8 +88,14 @@ export async function route(
     normalizedBirthday,
   );
 
-  const accessToken = jwt.sign({ username }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_DURATION });
-  const refreshToken = jwt.sign({ username }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_DURATION });
+  if (!user) {
+    throw new Error("User creation failed");
+  }
+
+  const accessToken = jwt.sign({ username, is_active: false }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_DURATION });
+  const refreshToken = jwt.sign({ username, is_active: false }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_DURATION });
+
+
 
   // TUZATILDI: db. olib tashlandi
   refreshTokens.set(refreshToken, username);
@@ -88,6 +107,33 @@ export async function route(
     path: "/refresh",
     maxAge: ms(REFRESH_DURATION),
     signed: true,
+  });
+
+  // Save confirmation code
+
+  const randomString = crypto.randomBytes(32).toString( "hex" )
+
+  await query(
+    `
+      INSERT INTO confirmations (user_id, token)
+      VALUES ($1::uuid, $2)
+    `,
+    user.id,
+    randomString,
+  );
+
+  // Send confirmation code
+
+  const html = `
+    <h1>Welcome</h1>
+    <a href="http://localhost:3101/confirm?token=${ randomString }" target="_blank">Betti bosing</a>
+  `
+
+  await transporter.sendMail({
+    from: "najimovsbox@gmail.com",
+    to: email,
+    subject: "Confirmation code from 50gram",
+    html: html
   });
 
   return { accessToken, code: "API_AUTH_OK" };
@@ -117,4 +163,3 @@ export async function refreshRoute(req: FastifyRequest, reply: FastifyReply) {
     return reply.code(401).send({ error: "Token expired or invalid" });
   }
 }
-

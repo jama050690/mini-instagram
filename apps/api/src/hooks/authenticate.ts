@@ -1,25 +1,29 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import jwt from "jsonwebtoken";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";
+const ACCESS_TOKEN_SECRET =
+  process.env.VITE_JWT_ACCESS_SECRET ||
+  process.env.ACCESS_TOKEN_SECRET ||
+  "super-secret-access";
 
-export function authenticate(
+export async function authenticate(
 	req: FastifyRequest,
 	reply: FastifyReply,
-	done: () => void,
 ) {
 	const auth = req.headers.authorization;
 
 	if (!auth?.startsWith("Bearer ")) {
-		return reply.code(401).send({ error: "Unauthorized" });
+		reply.code(401).send({ error: "Unauthorized" });
+		return;
 	}
 
 	try {
 		const token = auth.slice(7);
 		const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 		(req as any).user = decoded;
-		done();
 	} catch {
 		reply.code(401).send({ error: "Unauthorized" });
+		return;
 	}
 }
+export default authenticate;

@@ -1,4 +1,4 @@
-create extension if not exists pgcrypto;
+-- create extension if not exists pgcrypto;
 
 create table if not exists users (
 	id uuid primary key default gen_random_uuid(),
@@ -9,6 +9,7 @@ create table if not exists users (
 	lastname varchar(32),
 	avatar varchar(255),
 	birthday timestamptz,
+	is_active boolean default false,
 	created_at timestamptz default current_timestamp
 );
 
@@ -16,6 +17,13 @@ create table if not exists relations (
 	id uuid primary key default gen_random_uuid(),
 	follower_id uuid references users(id),
 	followee_id uuid references users(id),
+	created_at timestamptz default current_timestamp
+);
+
+create table confirmations (
+	id uuid primary key default gen_random_uuid(),
+	user_id uuid references users(id),
+	token varchar not null,
 	created_at timestamptz default current_timestamp
 );
 

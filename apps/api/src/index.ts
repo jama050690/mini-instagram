@@ -6,12 +6,12 @@ import routs from "./routs/index.js";
 const fastify = Fastify({
   logger: true,
 });
-const PORT = parseInt(process.env.VITE_API_PORT ?? "3100", 10);
+const PORT = parseInt(process.env.VITE_API_PORT ?? "3101", 10);
 
 fastify.get("/", async () => ({ message: "Ok" }));
 
 await fastify.register(cors, {
-  origin:"http://localhost:5173",
+  origin:"http://localhost:3200",
   credentials: true,
 });
 

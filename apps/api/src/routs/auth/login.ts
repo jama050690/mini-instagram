@@ -4,8 +4,14 @@ import jwt from "jsonwebtoken";
 import { getUserByLogin, query, refreshTokens } from "../services/db.js";
 import ms from "ms";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "super-secret-access";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "super-secret-refresh";
+const ACCESS_TOKEN_SECRET =
+  process.env.VITE_JWT_ACCESS_SECRET ||
+  process.env.ACCESS_TOKEN_SECRET ||
+  "super-secret-access";
+const REFRESH_TOKEN_SECRET =
+  process.env.VITE_JWT_REFRESH_SECRET ||
+  process.env.REFRESH_TOKEN_SECRET ||
+  "super-secret-refresh";
 const REFRESH_DURATION = "7d";
 const ACCESS_DURATION = "15m";
 

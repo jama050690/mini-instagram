@@ -10,12 +10,34 @@ type UserRow = {
   firstname: string | null;
   lastname: string | null;
   birthday: string | null;
+  is_active?: boolean;
 };
 
 export async function getUserByUsername(username: string) {
   const rows = await query<UserRow>(
     "SELECT * FROM users WHERE username = $1 LIMIT 1",
     username.toLowerCase(),
+  );
+  return rows[0] ?? null;
+}
+
+export async function getUserById(id: string) {
+  const rows = await query<UserRow>(
+    "SELECT * FROM users WHERE id = $1::uuid LIMIT 1",
+    id,
+  );
+  return rows[0] ?? null;
+}
+
+export async function activateUserById(id: string) {
+  const rows = await query<UserRow>(
+    `
+      UPDATE users
+      SET is_active = true
+      WHERE id = $1::uuid
+      RETURNING *
+    `,
+    id,
   );
   return rows[0] ?? null;
 }
